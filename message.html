@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>IM聊天</title>
+		<link href="css/bootstrap.min.css" rel="stylesheet">
+		<link href="css/bootstrap-datepicker3.min.css" rel="stylesheet">
+		<link href="css/bootstrap-switch.css" rel="stylesheet">
+		<link href="css/bootstrap-datetimepicker.min.css" rel="stylesheet">
+		<link href="css/bootstrap-table.css" rel="stylesheet">
+		<!-- sdk -->
+		<script type="text/javascript" src="http://app.cloopen.com/im50/ytx-web-im-min-new.js"></script>
+		<script src="js/jquery-1.11.3.min.js"></script>
+
+		<script type="text/javascript">
+			var appid = '8a216da85b3c225d015b5c59e6580e2e';
+			var name = getUrlParam('name');
+			var now = new Date();
+			var timestamp = now.getFullYear() + '' + ((now.getMonth() + 1) >= 10 ? "" + (now.getMonth() + 1) : "0" + (now.getMonth() + 1)) + (now.getDate() >= 10 ? now.getDate() : "0" + now.getDate()) + (now.getHours() >= 10 ? now.getHours() : "0" + now.getHours()) + (now.getMinutes() >= 10 ? now.getMinutes() : "0" + now.getMinutes()) + (now.getSeconds() >= 10 ? now.getSeconds() : "0" + now.getSeconds());
+			var apptoken = '3407eec3d56b1152b3df63f225491f3f';
+
+			init();
+			
+			function init() {
+				// 初始化
+				var resp = RL_YTX.init(appid);
+				if(170002 == resp.code) {
+					//缺少必要参数，详情见msg参数
+					//用户逻辑处理
+				} else if(174001 == resp.code) {
+					//不支持HTML5，关闭页面
+					//用户逻辑处理
+				} else if(200 == resp.code) {
+					//初始化成功
+					//用户逻辑处理
+					//判断不支持的功能，屏蔽页面展示
+					var unsupport = resp.unsupport;
+
+					// login
+					login();
+				}
+			}
+
+			function login() {
+				var sig = hex_md5(appid + name + timestamp + apptoken);
+				console.log("本地计算sig：" + sig);
+
+				//账号登录参数设置
+				var loginBuilder = new RL_YTX.LoginBuilder();
+				loginBuilder.setType(1); //登录类型 1账号登录，3通讯账号密码登录
+				loginBuilder.setUserName(name); //设置用户名
+				loginBuilder.setPwd(); //type值为1时，密码可以不赋值
+				loginBuilder.setSig(sig); //设置sig
+				loginBuilder.setTimestamp(timestamp); //设置时间戳
+				//执行用户登录
+				RL_YTX.login(loginBuilder, function(obj) {
+					console.log("EV_login succ...");
+					//登录成功回调
+					RL_YTX.onMsgReceiveListener(function(obj) {
+						//收到push消息或者离线消息或判断输入状态
+						//如果obj.msgType==12  判断obj.msgDomainn的值
+						//obj.msgDomain 0 无输入状态  1 正在输入  2 正在录音
+						console.log('Receive message sender:[' + obj.msgSender + ']...msgId:[' + obj.msgId + ']...content[' + obj.msgContent + ']');
+						$("#sendMessage").append('<li>' + obj.msgSender + ' : ' + obj.msgContent + '</li>');
+					});
+					//注册群组通知事件监听
+					RL_YTX.onNoticeReceiveListener(function(obj) {
+						//收到群组通知
+					});
+					RL_YTX.onConnectStateChangeLisenter(function(obj) {
+						//连接状态变更
+						// obj.code;//变更状态 1 断开连接 2 重连中 3 重连成功 4 被踢下线 5 断开连接，需重新登录
+						// 断线需要人工重连
+						console.log('onConnectStateChange');
+					});
+				}, function(obj) {
+					//登录失败方法回调
+					alert('login fail');
+				})
+			}
+
+			function sendMsg() {
+				var sendMessageInput = $("#sendMessageInput").val();
+
+				// IM.DO_sendMsg();
+				var msgid = new Date().getTime();
+				//IM.EV_sendTextMsg(msgid, sendMessageInput, 'content_you', false);
+				//新建消息体对象
+				var obj = new RL_YTX.MsgBuilder();
+				//设置自定义消息id
+				obj.setId(msgid);
+				//假设页面存在一个id为file的<input type=”file”>元素 
+				//获取图片或附件对象
+				//var file = document.getElementById("file").files[0];
+				//设置图片或附件对象
+				//obj.setFile(file);
+				//设置发送的文本内容
+				obj.setText(sendMessageInput);
+				//设置发送的消息类型1文本消息4 图片消息6 附件消息
+				//发送非文本消息时，text字段将被忽略，发送文本消息时 file字段将被忽略
+				obj.setType(1);
+				//设置接收者
+				obj.setReceiver(name == 'xi' ? 'bai' : 'xi');
+
+				RL_YTX.sendMsg(obj, function() {
+					//发送消息成功
+					//处理用户逻辑，通知页面
+					$("#sendMessage").append('<li>' + getUrlParam('name') + ' : ' + sendMessageInput + '</li>');
+					$("#sendMessageInput").val('');
+				}, function(obj) { //失败
+					//发送消息失败
+					//处理用户逻辑，通知页面刷新，展现重发按钮
+					alert('send fail!!!');
+				}, function(sended, total) {
+					//发送图片或附件时的进度条
+					//如果发送文本消息，可以不传该参数
+					console.log('send completed!!');
+				});
+			}
+
+			function getUrlParam(name) {
+				var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)"); //构造一个含有目标参数的正则表达式对象
+				var r = window.location.search.substr(1).match(reg); //匹配目标参数
+				if(r != null) return unescape(r[2]);
+				return null; //返回参数值
+			}
+		</script>
+	</head>
+
+	<body>
+		<div class="panel panel-info">
+			<div class="panel-heading">即时聊天窗口</div>
+			<div class="panel-body">
+				<!--<li id="getMessage" style="list-style:none;">他说：<span>Panel content</span></li>
+	  	<li id="sendMessage" style="float: right;list-style:none;"><span>Panel content</span>&nbsp;&nbsp;:我说&nbsp;&nbsp;</li>-->
+				<ul id="sendMessage"></ul>
+			</div>
+		</div>
+		<div class="bottom" style="padding-top: 300px;">
+			<div class="bottom-left">
+				<div class="input-group">
+					<input type="text" class="form-control" id="sendMessageInput" aria-describedby="inputGroupSuccess3Status">
+					<span class="input-group-addon" id="sendMessage"><button onclick="sendMsg()">发送</button></span>
+				</div>
+			</div>
+		</div>
+	</body>
+
+</html>

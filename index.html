@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>IM即时通讯</title>
+		<link href="css/bootstrap.min.css" rel="stylesheet">
+		<link href="css/bootstrap-datepicker3.min.css" rel="stylesheet">
+		<link href="css/bootstrap-switch.css" rel="stylesheet">
+		<link href="css/bootstrap-datetimepicker.min.css" rel="stylesheet">
+		<link href="css/bootstrap-table.css" rel="stylesheet">
+		<script type="text/javascript">
+			function login() {
+				var inputname = $("#inputname").val();
+				var inputpsw = $("#inputpsw").val();
+				if(inputname != "" && inputpsw != "") {
+					if(inputname == "1") {
+						location.href = "message.html?name=bai";
+					} else if(inputname == "2") {
+						location.href = "message.html?name=xi";
+					} else {
+						alert("帐号或密码错误");
+					}
+				}
+			}
+		</script>
+	</head>
+
+	<body>
+		<form class="form-horizontal">
+			<div class="row">
+				<div class="col-lg-6">
+					<div class="form-group has-success has-feedback">
+						<label class="control-label col-sm-3">Input username：</label>
+						<div class="col-sm-9">
+							<input type="text" class="form-control" id="inputname" aria-describedby="inputSuccess3Status">
+						</div>
+					</div>
+				</div>
+				<!-- /.col-lg-6 -->
+				<div class="col-lg-6">
+					<div class="form-group has-success has-feedback">
+						<label class="control-label col-sm-3">Input password：</label>
+						<div class="col-sm-9">
+							<input type="text" class="form-control" id="inputpsw" aria-describedby="inputSuccess3Status">
+						</div>
+					</div>
+				</div>
+				<!-- /.col-lg-6 -->
+			</div>
+			<!-- /.row -->
+		</form>
+		<div class="row">
+			<div class="col-md-6">
+			</div>
+			<div class="col-md-6">
+				<button type="button" class="btn btn-success btn btn-primary btn-lg btn-block" style="margin-top: 30px;" onclick="login();">login</button>
+			</div>
+		</div>
+		<script src="js/jquery-1.11.3.min.js"></script>
+	</body>
+
+</html>
